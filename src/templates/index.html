@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ublog - Home</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; color: #333; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
+        .navbar a { text-decoration: none; color: #0066cc; font-weight: bold; }
+        .navbar a:hover { text-decoration: underline; }
+        .site-brand { font-size: 1.5rem; font-weight: bold; color: #333 !important; text-decoration: none !important; }
+        .cog-icon { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; vertical-align: middle; }
+        .cog-icon:hover { transform: scale(1.1); }
+        .main-content { text-align: center; padding: 40px 20px; max-width: 900px; margin: 0 auto; }
+        .flash-messages { color: green; font-weight: bold; margin-bottom: 20px; }
+        
+        .card-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: left; margin-bottom: 30px; }
+        .card-container input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 10px; font-family: inherit; }
+        
+        .btn-primary { background-color: #0066cc; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary:hover { background-color: #005bb5; }
+        .btn-danger { background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+        
+        /* --- Blog List & Search Styles --- */
+        .search-bar { display: flex; gap: 10px; margin-bottom: 30px; }
+        .search-bar input { flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+        
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; text-align: left; }
+        .blog-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s; display: flex; flex-direction: column; }
+        .blog-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .blog-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .blog-title { font-size: 1.25rem; font-weight: bold; color: #0066cc; text-decoration: none; }
+        .blog-title:hover { text-decoration: underline; }
+        .blog-desc { color: #555; flex-grow: 1; margin: 0 0 15px 0; font-size: 0.95rem; }
+        .blog-meta { font-size: 0.85em; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="{{ url_for('index') }}" class="site-brand">ublog 🚀</a>
+            {% if user %}
+                <a href="{{ url_for('explore') }}">Explore Users</a>
+            {% endif %}
+        </div>
+        
+        <div class="nav-right">
+            {% if user %}
+                <span>Logged in as <b>{{ user.username }}</b></span>
+                <a href="{{ url_for('user_profile', username=user.username) }}">My Profile</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+                
+                {% if user.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" title="Admin Dashboard">
+                        <img src="{{ url_for('static', filename='blue_cog.png') }}" alt="Admin Settings" class="cog-icon">
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('signup') }}">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        {% if user %}
+            <!-- Create a Blog Form -->
+            <div class="card-container">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Create a New Blog</h3>
+                <form method="POST" action="{{ url_for('create_blog') }}">
+                    <input type="text" name="title" placeholder="Blog Title (e.g., Tech News)" required>
+                    <input type="text" name="description" placeholder="Short description...">
+                    <button type="submit" class="btn-primary">Create Blog</button>
+                </form>
+            </div>
+            
+            <h2 style="text-align: left; color: #444; border-bottom: 2px solid #ddd; padding-bottom: 10px;">Explore Blogs</h2>
+            
+            <!-- Search Bar -->
+            <form class="search-bar" method="GET" action="{{ url_for('index') }}">
+                <input type="text" name="q" placeholder="Search blogs by title..." value="{{ search_query }}">
+                <button type="submit" class="btn-primary">Search</button>
+                {% if search_query %}
+                    <a href="{{ url_for('index') }}" class="btn-primary" style="background-color: #6c757d; text-decoration: none; padding-top: 12px;">Clear</a>
+                {% endif %}
+            </form>
+
+            <!-- Blog List Grid -->
+            <div class="blog-grid">
+                {% for blog in blogs %}
+                    <div class="blog-card">
+                        <div class="blog-card-header">
+                            <a href="{{ url_for('view_blog', blog_id=blog.id) }}" class="blog-title">{{ blog.title }}</a>
+                            
+                            <!-- Admin Delete Blog Button -->
+                            {% if user.role == 'admin' %}
+                                <form action="{{ url_for('delete_blog', blog_id=blog.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this entire blog?');">
+                                    <button type="submit" class="btn-danger" title="Delete Blog">X</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <p class="blog-desc">{{ blog.description }}</p>
+                        <div class="blog-meta">Created by <strong>{{ blog.owner.username }}</strong></div>
+                    </div>
+                {% else %}
+                    <p style="grid-column: 1 / -1; color: #888;">No blogs found. Be the first to create one!</p>
+                {% endfor %}
+            </div>
+            
+        {% else %}
+            <h1>Welcome to ublog!</h1>
+            <p>A simple, powerful place to create blogs and share your thoughts.</p>
+            <p>Get started by <a href="{{ url_for('signup') }}">creating an account</a>.</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>

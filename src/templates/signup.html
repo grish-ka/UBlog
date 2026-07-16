@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ublog - Sign Up</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+        form { display: inline-block; text-align: left; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input { display: block; margin-bottom: 15px; padding: 8px; width: 200px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 15px; }
+        button:hover { background-color: #005bb5; }
+        .error { color: red; margin-bottom: 15px; }
+    </style>
+    <!-- Load reCAPTCHA script -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+    <h1>Create an Account</h1>
+    
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="error">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label>Username</label>
+        <input type="text" name="username" required>
+        
+        <label>Email</label>
+        <input type="email" name="email" required>
+        
+        <label>Password</label>
+        <input type="password" name="password" required>
+        
+        <!-- Render reCAPTCHA Widget if site_key is provided -->
+        {% if site_key %}
+            <div class="g-recaptcha" data-sitekey="{{ site_key }}"></div>
+        {% endif %}
+
+        <button type="submit">Sign Up</button>
+    </form>
+    
+    <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ublog - Admin Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; color: #333; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .navbar a { text-decoration: none; color: #0066cc; font-weight: bold; }
+        .site-brand { font-size: 1.5rem; color: #333 !important; }
+        
+        .main-content { max-width: 900px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 25px; }
+        h2 { color: #555; margin-top: 40px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
+        th { background-color: #f8f9fa; }
+        
+        .btn-danger { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+        .btn-danger:hover { background-color: #c82333; }
+        
+        .flash-messages { color: green; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="site-brand">ublog 🚀</a>
+        <a href="{{ url_for('index') }}">← Back to Home</a>
+    </nav>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <h1>⚙️ Admin Dashboard</h1>
+        <p>Welcome to the control center, {{ user.username }}.</p>
+        
+        <!-- Blogs Section -->
+        <h2>All Blogs</h2>
+        <table>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Owner</th>
+                <th>Action</th>
+            </tr>
+            {% for blog in blogs %}
+            <tr>
+                <td><a href="{{ url_for('view_blog', blog_id=blog.id) }}">{{ blog.title }}</a></td>
+                <td>{{ blog.description[:60] }}...</td>
+                <td>{{ blog.owner.username }}</td>
+                <td>
+                    <form action="{{ url_for('delete_blog', blog_id=blog.id) }}" method="POST" onsubmit="return confirm('Delete this entire blog?');">
+                        <button type="submit" class="btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No blogs found.</td></tr>
+            {% endfor %}
+        </table>
+
+        <!-- Posts Section -->
+        <h2>All Posts</h2>
+        <table>
+            <tr>
+                <th>Author</th>
+                <th>Content</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+            {% for post in posts %}
+            <tr>
+                <td>{{ post.author.username }}</td>
+                <td>{{ post.body[:60] }}...</td>
+                <td>{{ post.timestamp.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('Delete this post?');">
+                        <button type="submit" class="btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No posts found.</td></tr>
+            {% endfor %}
+        </table>
+
+        <!-- Users Section -->
+        <h2>All Users</h2>
+        <table>
+            <tr>
+                <th>Avatar</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Profile</th>
+            </tr>
+            {% for u in users %}
+            <tr>
+                <td><img src="{{ u.avatar(32) }}" alt="Avatar" style="border-radius: 50%;"></td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td><strong>{{ u.role|title }}</strong></td>
+                <td><a href="{{ url_for('user_profile', username=u.username) }}">View Profile</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

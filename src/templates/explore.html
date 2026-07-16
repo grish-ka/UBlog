@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ublog - Explore Users</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; color: #333; }
+        .explore-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            text-align: left; 
+        }
+        .user-card { 
+            background: white; 
+            padding: 15px 20px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .user-card a { text-decoration: none; color: #0066cc; font-weight: bold; font-size: 1.2em; }
+        .user-card a:hover { text-decoration: underline; }
+        
+        .role-badge {
+            background-color: #eee;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .role-admin { background-color: #cce5ff; color: #004085; }
+        .role-moderator { background-color: #e2d9f3; color: #381b85; }
+        .nav-links { margin-top: 30px; text-align: center; }
+        .nav-links a { text-decoration: none; color: #0066cc; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Explore Users 🌍</h1>
+    <p>Discover everyone who has joined ublog!</p>
+    
+    <div class="explore-container">
+        {% for u in users %}
+        <div class="user-card">
+            <a href="{{ url_for('user_profile', username=u.username) }}">{{ u.username }}</a>
+            <span class="role-badge role-{{ u.role }}">{{ u.role|title }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="nav-links">
+        <a href="{{ url_for('index') }}">← Back to Home</a>
+    </div>
+</body>
+</html>
