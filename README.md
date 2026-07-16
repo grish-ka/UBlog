@@ -61,3 +61,51 @@ while true; do
     fi  
 done  
 ```
+
+## run the simple way
+1. pull image
+```bash
+docker pull grishkkka/ublog
+```
+2. run
+
+2.1. create run.sh
+```bash
+\#\!/bin/bash
+
+echo "🧹 Cleaning up any old containers..."  
+docker rm \-f ublog 2\>/dev/null
+
+echo "🚀 Starting ublog with persistent volume..."  
+docker run \-d \-p 8080:5000 \\  
+  \-v ublog\_data:/app/src/instance \\  
+  \-e ADMIN\_EMAIL="YOUR\_EMAIL\_HERE" \\  
+  \-e RECAPTCHA\_SITE\_KEY="YOUR\_RECAPTCHA\_SITE\_KEY\_HERE" \\  
+  \-e RECAPTCHA\_SECRET\_KEY="YOUR\_RECAPTCHA\_SECRET\_KEY\_HERE" \\  
+  \--name ublog ublog:dev
+
+echo "✅ ublog is now running\!"  
+echo "👉 Open your browser to: http://localhost:8080"  
+echo "------------------------------------------------"
+
+\# Wait for input to kill the container  
+while true; do  
+    read \-p "Type 'k' and press Enter to kill the server (or anything else to ignore): " input  
+      
+    if \[ "$input" \== "k" \]; then  
+        echo "🛑 Stopping and removing ublog..."  
+        docker rm \-f ublog  
+        echo "👋 All clean\! Server stopped."  
+        break  
+    else  
+        echo "👍 Keeping the server running."  
+    fi  
+done  
+```
+2.2. run it
+```bash 
+chmod +x ./run.sh
+```
+```bash
+./run.sh
+```
