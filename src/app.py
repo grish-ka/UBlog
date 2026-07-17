@@ -93,10 +93,10 @@ with app.app_context():
     db.create_all()
     # Safe migration trick: Add 'about_me' column if it doesn't exist yet!
     try:
-        db.session.execute(db.text('ALTER TABLE user ADD COLUMN about_me VARCHAR(140)'))
+        db.session.execute(db.text('ALTER TABLE "user" ADD COLUMN about_me VARCHAR(140)'))
         db.session.commit()
     except Exception:
-        pass
+        db.session.rollback() # MAGIC FIX: Reset Postgres if the column already exists!
         
     # Auto-upgrade the environment variable admin to the permanent 'owner' role
     admin_email = os.environ.get("ADMIN_EMAIL")
