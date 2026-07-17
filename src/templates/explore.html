@@ -4,35 +4,53 @@
     <title>ublog - Explore Users</title>
     <style>
         body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; color: #333; }
-        .explore-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            text-align: left; 
-        }
+        .explore-container { max-width: 600px; margin: 0 auto; text-align: left; }
         .user-card { 
             background: white; 
             padding: 15px 20px; 
-            margin-bottom: 10px; 
+            margin-bottom: 15px; 
             border-radius: 8px; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            gap: 15px;
         }
         .user-card a { text-decoration: none; color: #0066cc; font-weight: bold; font-size: 1.2em; }
         .user-card a:hover { text-decoration: underline; }
         
-        .role-badge {
-            background-color: #eee;
+        .role-badge { background-color: #eee; padding: 4px 8px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
+        
+        /* Shiny Title Animation for Roles */
+        .shiny-title {
+            background: linear-gradient(110deg, #e2d9f3 25%, #ffffff 50%, #e2d9f3 75%);
+            background-size: 200% auto;
+            color: #381b85;
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 0.85em;
             font-weight: bold;
+            animation: shine 3s linear infinite;
+            border: 1px solid #d0c0eb;
+            display: inline-block;
         }
-        .role-admin { background-color: #cce5ff; color: #004085; }
-        .role-moderator { background-color: #e2d9f3; color: #381b85; }
+        .shiny-admin {
+            background: linear-gradient(110deg, #cce5ff 25%, #ffffff 50%, #cce5ff 75%);
+            color: #004085;
+            border-color: #b8daff;
+        }
+        .shiny-owner {
+            background: linear-gradient(110deg, #ffd700 25%, #ffffff 50%, #ffd700 75%);
+            color: #856404;
+            border-color: #ffeeba;
+        }
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
         .nav-links { margin-top: 30px; text-align: center; }
         .nav-links a { text-decoration: none; color: #0066cc; font-weight: bold; }
+        .avatar-img { border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); width: 40px; height: 40px; }
     </style>
 </head>
 <body>
@@ -42,8 +60,23 @@
     <div class="explore-container">
         {% for u in users %}
         <div class="user-card">
-            <a href="{{ url_for('user_profile', username=u.username) }}">{{ u.username }}</a>
-            <span class="role-badge role-{{ u.role }}">{{ u.role|title }}</span>
+            <!-- Avatar -->
+            <img src="{{ u.avatar(40) }}" alt="Avatar" class="avatar-img">
+            
+            <div style="flex-grow: 1;">
+                <a href="{{ url_for('user_profile', username=u.username) }}">{{ u.username }}</a>
+            </div>
+            
+            <!-- Shiny Title Logic -->
+            {% if u.role == 'owner' %}
+                <span class="shiny-title shiny-owner">Owner</span>
+            {% elif u.role == 'admin' %}
+                <span class="shiny-title shiny-admin">Admin</span>
+            {% elif u.role == 'moderator' %}
+                <span class="shiny-title">Moderator</span>
+            {% else %}
+                <span class="role-badge">User</span>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

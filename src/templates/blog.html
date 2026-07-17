@@ -33,6 +33,30 @@
         .post-body { font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; margin-top: 10px;}
         .post-actions { margin-top: 15px; text-align: right; }
         .avatar-img { border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        /* Shiny Title Animation */
+        .shiny-title {
+            background: linear-gradient(110deg, #e2d9f3 25%, #ffffff 50%, #e2d9f3 75%);
+            background-size: 200% auto;
+            color: #381b85;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: shine 3s linear infinite;
+            border: 1px solid #d0c0eb;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .shiny-admin {
+            background: linear-gradient(110deg, #cce5ff 25%, #ffffff 50%, #cce5ff 75%);
+            color: #004085;
+            border-color: #b8daff;
+        }
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
     </style>
 </head>
 <body>
@@ -60,7 +84,6 @@
             <h1>{{ blog.title }}</h1>
             <p>{{ blog.description }}</p>
             
-            <!-- Added Avatar to Blog Meta here! -->
             <div class="blog-meta">
                 <img src="{{ blog.owner.avatar(32) }}" alt="Avatar" class="avatar-img" style="width: 32px; height: 32px;">
                 <span>Created by <a href="{{ url_for('user_profile', username=blog.owner.username) }}" style="color: #0066cc; text-decoration: none;"><b>{{ blog.owner.username }}</b></a></span>
@@ -84,17 +107,26 @@
             {% for post in posts %}
                 <div class="post-card">
                     <div class="post-card-header">
-                        <!-- Added Avatar here! -->
                         <img src="{{ post.author.avatar(40) }}" alt="Avatar" class="avatar-img" style="width: 40px; height: 40px;">
                         
                         <div style="flex-grow: 1; display: flex; justify-content: space-between; align-items: center;">
-                            <a href="{{ url_for('user_profile', username=post.author.username) }}" class="post-author">{{ post.author.username }}</a>
+                            <div>
+                                <a href="{{ url_for('user_profile', username=post.author.username) }}" class="post-author">{{ post.author.username }}</a>
+                                <!-- Shiny Title Logic -->
+                                {% if post.author.role == 'owner' %}
+                                    <span class="shiny-title shiny-admin" style="background: linear-gradient(110deg, #ffd700 25%, #ffffff 50%, #ffd700 75%); color: #856404; border-color: #ffeeba;">Owner</span>
+                                {% elif post.author.role == 'moderator' %}
+                                    <span class="shiny-title">Moderator</span>
+                                {% elif post.author.role == 'admin' %}
+                                    <span class="shiny-title shiny-admin">Admin</span>
+                                {% endif %}
+                            </div>
                             <span class="post-date">{{ post.timestamp.strftime('%B %d, %Y at %H:%M') }}</span>
                         </div>
                     </div>
                     <div class="post-body">{{ post.body }}</div>
                     
-                    {% if user and (user.role in ['admin', 'moderator'] or user.id == post.user_id) %}
+                    {% if user and (user.role in ['admin', 'owner', 'moderator'] or user.id == post.user_id) %}
                         <div class="post-actions">
                             <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');">
                                 <button type="submit" class="btn-danger">Delete Post</button>
@@ -112,13 +144,23 @@
                             <div style="flex-grow: 1;">
                                 <div style="font-size: 0.85em; margin-bottom: 3px;">
                                     <a href="{{ url_for('user_profile', username=comment.author.username) }}" style="font-weight: bold; color: #0066cc; text-decoration: none;">{{ comment.author.username }}</a>
+                                    
+                                    <!-- Shiny Title Logic for Comments -->
+                                    {% if comment.author.role == 'owner' %}
+                                        <span class="shiny-title shiny-admin" style="background: linear-gradient(110deg, #ffd700 25%, #ffffff 50%, #ffd700 75%); color: #856404; border-color: #ffeeba; font-size: 0.8em; padding: 1px 6px;">Owner</span>
+                                    {% elif comment.author.role == 'moderator' %}
+                                        <span class="shiny-title" style="font-size: 0.8em; padding: 1px 6px;">Moderator</span>
+                                    {% elif comment.author.role == 'admin' %}
+                                        <span class="shiny-title shiny-admin" style="font-size: 0.8em; padding: 1px 6px;">Admin</span>
+                                    {% endif %}
+                                    
                                     <span style="color: #888; margin-left: 5px;">{{ comment.timestamp.strftime('%B %d, %Y at %H:%M') }}</span>
                                 </div>
                                 <div style="font-size: 0.95em;">{{ comment.body }}</div>
                             </div>
                             
                             <!-- Delete button for the comment -->
-                            {% if user and (user.role in ['admin', 'moderator'] or user.id == comment.user_id) %}
+                            {% if user and (user.role in ['admin', 'owner', 'moderator'] or user.id == comment.user_id) %}
                                 <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" onsubmit="return confirm('Delete this comment?');">
                                     <button type="submit" class="btn-danger" style="padding: 2px 6px; font-size: 0.7em;">X</button>
                                 </form>
@@ -143,5 +185,25 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- SPAM PREVENTION SCRIPT -->
+    <script>
+        // Safely prevent double-clicking without completely breaking form submission
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (form.classList.contains('is-submitting')) {
+                    e.preventDefault(); // Block double-clicks
+                } else {
+                    form.classList.add('is-submitting');
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.innerText = 'Sending...';
+                        btn.style.opacity = '0.7';
+                        btn.style.cursor = 'not-allowed';
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

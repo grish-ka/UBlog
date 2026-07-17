@@ -20,6 +20,7 @@
         .btn-danger:hover { background-color: #c82333; }
         
         .flash-messages { color: green; font-weight: bold; margin-bottom: 20px; }
+        .root-badge { background-color: #ffd700; color: #856404; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -101,6 +102,7 @@
                 <th>Email</th>
                 <th>Role</th>
                 <th>Profile</th>
+                <th>Action</th>
             </tr>
             {% for u in users %}
             <tr>
@@ -109,6 +111,15 @@
                 <td>{{ u.email }}</td>
                 <td><strong>{{ u.role|title }}</strong></td>
                 <td><a href="{{ url_for('user_profile', username=u.username) }}">View Profile</a></td>
+                <td>
+                    {% if u.role == 'owner' %}
+                        <span class="root-badge">Owner</span>
+                    {% elif u.id != user.id %}
+                        <form action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" onsubmit="return confirm('WARNING: This will delete the user AND all their posts, blogs, and comments. Are you sure?');">
+                            <button type="submit" class="btn-danger">Delete User</button>
+                        </form>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </table>

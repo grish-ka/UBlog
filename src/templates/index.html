@@ -32,7 +32,8 @@
         .blog-title { font-size: 1.25rem; font-weight: bold; color: #0066cc; text-decoration: none; }
         .blog-title:hover { text-decoration: underline; }
         .blog-desc { color: #555; flex-grow: 1; margin: 0 0 15px 0; font-size: 0.95rem; }
-        .blog-meta { font-size: 0.85em; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+        .blog-meta { display: flex; align-items: center; gap: 10px; font-size: 0.85em; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+        .avatar-img { border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -47,11 +48,14 @@
         
         <div class="nav-right">
             {% if user %}
-                <span>Logged in as <b>{{ user.username }}</b></span>
+                <span style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ user.avatar(32) }}" alt="Avatar" class="avatar-img" style="width: 32px; height: 32px;">
+                    <span>Logged in as <b>{{ user.username }}</b></span>
+                </span>
                 <a href="{{ url_for('user_profile', username=user.username) }}">My Profile</a>
                 <a href="{{ url_for('logout') }}">Logout</a>
                 
-                {% if user.role == 'admin' %}
+                {% if user.role in ['admin', 'owner'] %}
                     <a href="{{ url_for('admin_dashboard') }}" title="Admin Dashboard">
                         <img src="{{ url_for('static', filename='blue_cog.png') }}" alt="Admin Settings" class="cog-icon">
                     </a>
@@ -104,14 +108,17 @@
                             <a href="{{ url_for('view_blog', blog_id=blog.id) }}" class="blog-title">{{ blog.title }}</a>
                             
                             <!-- Admin Delete Blog Button -->
-                            {% if user.role == 'admin' %}
+                            {% if user.role in ['admin', 'owner'] %}
                                 <form action="{{ url_for('delete_blog', blog_id=blog.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this entire blog?');">
                                     <button type="submit" class="btn-danger" title="Delete Blog">X</button>
                                 </form>
                             {% endif %}
                         </div>
                         <p class="blog-desc">{{ blog.description }}</p>
-                        <div class="blog-meta">Created by <strong>{{ blog.owner.username }}</strong></div>
+                        <div class="blog-meta">
+                            <img src="{{ blog.owner.avatar(24) }}" alt="Avatar" class="avatar-img" style="width: 24px; height: 24px;">
+                            <span>Created by <strong>{{ blog.owner.username }}</strong></span>
+                        </div>
                     </div>
                 {% else %}
                     <p style="grid-column: 1 / -1; color: #888;">No blogs found. Be the first to create one!</p>

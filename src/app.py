@@ -97,6 +97,14 @@ with app.app_context():
         db.session.commit()
     except Exception:
         pass
+        
+    # Auto-upgrade the environment variable admin to the permanent 'owner' role
+    admin_email = os.environ.get("ADMIN_EMAIL")
+    if admin_email:
+        root_user = User.query.filter_by(email=admin_email).first()
+        if root_user and root_user.role != 'owner':
+            root_user.role = 'owner'
+            db.session.commit()
 
 # --- Helper Functions ---
 def verify_recaptcha(recaptcha_response):
@@ -135,7 +143,7 @@ def admin_required(f):
             return redirect(url_for('login'))
             
         current_user = db.session.get(User, session["user_id"])
-        if not current_user or current_user.role != 'admin':
+        if not current_user or current_user.role not in ['admin', 'owner']:
             flash("Access Denied: You must be an Admin to perform this action.")
             return redirect(url_for('index'))
             
@@ -180,7 +188,7 @@ def view_blog(blog_id):
         post_body = request.form.get("body")
         if post_body:
             new_post = Post(body=post_body, author=current_user)
-            new_post.blogs.append(blog)
+            blog.posts.append(new_post) # Safer append to avoid potential crashes
             db.session.add(new_post)
             db.session.commit()
             flash("Your post is now live!")
@@ -216,11 +224,16 @@ def delete_post(post_id):
     post = db.session.get(Post, post_id)
     
     if post:
-        # Only allow deletion if it's their own post, OR if they are an admin/moderator
-        if post.user_id == current_user.id or current_user.role in ['admin', 'moderator']:
+        # Only allow deletion if it's their own post, OR if they are an admin/owner/moderator
+        if post.user_id == current_user.id or current_user.role in ['admin', 'owner', 'moderator']:
+            
+            # NESTED DELETE: Erase all comments on this post first!
+            for comment in post.comments:
+                db.session.delete(comment)
+                
             db.session.delete(post)
             db.session.commit()
-            flash("Post deleted successfully.")
+            flash("Post and all its comments deleted successfully.")
         else:
             flash("You don't have permission to delete this post.")
             
@@ -250,8 +263,8 @@ def delete_comment(comment_id):
     comment = db.session.get(Comment, comment_id)
     if comment:
         current_user = db.session.get(User, session["user_id"])
-        # Allow author, admin, or moderator to delete comment
-        if current_user.id == comment.user_id or current_user.role in ['admin', 'moderator']:
+        # Allow author, admin, owner, or moderator to delete comment
+        if current_user.id == comment.user_id or current_user.role in ['admin', 'owner', 'moderator']:
             db.session.delete(comment)
             db.session.commit()
             flash("Comment deleted.")
@@ -357,6 +370,11 @@ def promote_user(username):
         flash("User not found.")
         return redirect(url_for('index'))
         
+    # Backend Security: Prevent the owner from ever being demoted
+    if user_to_update.role == 'owner':
+        flash("The Owner cannot be demoted or modified!")
+        return redirect(url_for('user_profile', username=username))
+        
     action = request.form.get("action")
     if action == "promote":
         user_to_update.role = 'moderator'
@@ -370,6 +388,45 @@ def promote_user(username):
         
     db.session.commit()
     return redirect(url_for('user_profile', username=username))
+
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
+@admin_required
+def delete_user(user_id):
+    user_to_delete = db.session.get(User, user_id)
+    if not user_to_delete:
+        flash("User not found.")
+        return redirect(url_for('admin_dashboard'))
+        
+    # Backend Security: Prevent the owner from ever being deleted
+    if user_to_delete.role == 'owner':
+        flash("The Owner cannot be deleted!")
+        return redirect(url_for('admin_dashboard'))
+        
+    # Prevent admin from accidentally deleting themselves
+    current_user = db.session.get(User, session["user_id"])
+    if user_to_delete.id == current_user.id:
+        flash("You cannot delete yourself!")
+        return redirect(url_for('admin_dashboard'))
+        
+    # NESTED DELETE: Wipe everything this user ever created!
+    # 1. Delete their comments
+    for comment in user_to_delete.comments:
+        db.session.delete(comment)
+    # 2. Delete their posts (and the comments attached to those posts)
+    for post in user_to_delete.posts:
+        for post_comment in post.comments:
+            db.session.delete(post_comment)
+        db.session.delete(post)
+    # 3. Delete their blogs
+    for blog in user_to_delete.owned_blogs:
+        db.session.delete(blog)
+        
+    # Finally, delete the user
+    db.session.delete(user_to_delete)
+    db.session.commit()
+    
+    flash(f"User {user_to_delete.username} and ALL their content has been eradicated.")
+    return redirect(url_for('admin_dashboard'))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -390,7 +447,7 @@ def signup():
         role = "user"
         admin_email = os.environ.get("ADMIN_EMAIL")
         if admin_email and email == admin_email:
-            role = "admin"
+            role = "owner"
 
         new_user = User(username=username, email=email, role=role)
         new_user.set_password(password)

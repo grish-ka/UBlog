@@ -3,7 +3,15 @@
 <head>
     <title>ublog - {{ profile_user.username }}'s Profile</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; color: #333; }
+        body { font-family: sans-serif; text-align: center; margin: 0; background-color: #f4f4f9; color: #333; }
+        
+        /* Navbar Styles */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: left; }
+        .navbar a { text-decoration: none; color: #0066cc; font-weight: bold; }
+        .site-brand { font-size: 1.5rem; color: #333 !important; }
+        
+        .main-content { margin-top: 40px; }
+        
         .profile-card { 
             background: white; 
             padding: 30px; 
@@ -13,110 +21,139 @@
             text-align: left;
             min-width: 300px;
         }
-        .role-badge {
-            background-color: #eee;
+        
+        /* Shiny Title Animation for Roles */
+        .role-badge { background-color: #eee; padding: 4px 8px; border-radius: 12px; font-size: 0.85em; font-weight: bold; display: inline-block; vertical-align: middle; }
+        .shiny-title {
+            background: linear-gradient(110deg, #e2d9f3 25%, #ffffff 50%, #e2d9f3 75%);
+            background-size: 200% auto;
+            color: #381b85;
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 0.85em;
             font-weight: bold;
+            animation: shine 3s linear infinite;
+            border: 1px solid #d0c0eb;
+            display: inline-block;
+            vertical-align: middle;
         }
-        .role-admin { background-color: #cce5ff; color: #004085; }
-        .role-moderator { background-color: #e2d9f3; color: #381b85; }
-        .nav-links { margin-top: 20px; }
-        .nav-links a { text-decoration: none; color: #0066cc; font-weight: bold; }
+        .shiny-admin {
+            background: linear-gradient(110deg, #cce5ff 25%, #ffffff 50%, #cce5ff 75%);
+            color: #004085;
+            border-color: #b8daff;
+        }
+        .shiny-owner {
+            background: linear-gradient(110deg, #ffd700 25%, #ffffff 50%, #ffd700 75%);
+            color: #856404;
+            border-color: #ffeeba;
+        }
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
         
-        /* New Button Styles */
+        /* Button Styles */
         .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
         .btn-follow { background-color: #28a745; margin-top: 15px; width: 100%; }
         .btn-promote { background-color: #6f42c1; width: 100%; margin-top: 10px; }
         .btn-promote-admin { background-color: #0056b3; width: 100%; margin-top: 10px; }
         .btn-demote { background-color: #dc3545; width: 100%; margin-top: 10px; }
-        .admin-controls { margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
         .flash-messages { color: green; font-weight: bold; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h1>User Profile</h1>
     
-    <!-- Display any alert messages (like "Promoted successfully!") -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for message in messages %}
-            <p>{{ message }}</p>
-          {% endfor %}
+    <!-- Navigation Bar with Back Button -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="{{ url_for('index') }}" class="site-brand">ublog 🚀</a>
         </div>
-      {% endif %}
-    {% endwith %}
+        <div class="nav-right">
+            <a href="{{ url_for('index') }}">← Back to Home</a>
+        </div>
+    </nav>
 
-    <div class="profile-card">
-        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-            <img src="{{ profile_user.avatar(96) }}" alt="Avatar" style="border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div>
-                <h2 style="margin: 0;">{{ profile_user.username }}</h2>
-                <p style="margin: 5px 0 0 0;"><strong>Role:</strong> 
-                    <span class="role-badge role-{{ profile_user.role }}">
-                        {{ profile_user.role|title }}
-                    </span>
-                </p>
+    <div class="main-content">
+        <h1>User Profile</h1>
+        
+        <!-- Display any alert messages (like "Promoted successfully!") -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
             </div>
-        </div>
-        
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center;">
-            <div><strong>{{ profile_user.posts.count() }}</strong><br><small>Posts</small></div>
-            <div><strong>{{ profile_user.followers.count() }}</strong><br><small>Followers</small></div>
-            <div><strong>{{ profile_user.followed.count() }}</strong><br><small>Following</small></div>
-        </div>
+          {% endif %}
+        {% endwith %}
 
-        {% if profile_user.about_me %}
-            <p><strong>About Me:</strong><br>{{ profile_user.about_me }}</p>
-        {% else %}
-            <p style="color: #888;"><em>This user hasn't written a bio yet.</em></p>
-        {% endif %}
-        
-        {% if current_user.id == profile_user.id %}
-            <hr>
-            <form action="{{ url_for('edit_profile') }}" method="POST" style="margin-top: 15px;">
-                <label style="font-weight: bold; font-size: 0.9em;">Update Bio:</label>
-                <textarea name="about_me" rows="2" style="width: 100%; box-sizing: border-box; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-top: 5px; font-family: inherit;">{{ current_user.about_me or '' }}</textarea>
-                <button type="submit" class="btn btn-promote" style="background-color: #0066cc;">Save Profile</button>
-            </form>
-        {% else %}
-            <!-- Follow/Unfollow Buttons -->
-            <form action="{{ url_for('unfollow' if is_following else 'follow', username=profile_user.username) }}" method="POST">
-                {% if is_following %}
-                    <button type="submit" class="btn btn-follow" style="background-color: #6c757d;">Unfollow {{ profile_user.username }}</button>
-                {% else %}
-                    <button type="submit" class="btn btn-follow">Follow {{ profile_user.username }}</button>
-                {% endif %}
-            </form>
-        {% endif %}
+        <div class="profile-card">
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                <img src="{{ profile_user.avatar(96) }}" alt="Avatar" style="border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div>
+                    <h2 style="margin: 0;">{{ profile_user.username }}</h2>
+                    <p style="margin: 5px 0 0 0;"><strong>Role:</strong> 
+                        <!-- Shiny Title Logic -->
+                        {% if profile_user.role == 'owner' %}
+                            <span class="shiny-title shiny-owner">Owner</span>
+                        {% elif profile_user.role == 'admin' %}
+                            <span class="shiny-title shiny-admin">Admin</span>
+                        {% elif profile_user.role == 'moderator' %}
+                            <span class="shiny-title">Moderator</span>
+                        {% else %}
+                            <span class="role-badge">User</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center;">
+                <div><strong>{{ profile_user.posts.count() }}</strong><br><small>Posts</small></div>
+                <div><strong>{{ profile_user.followers.count() }}</strong><br><small>Followers</small></div>
+                <div><strong>{{ profile_user.followed.count() }}</strong><br><small>Following</small></div>
+            </div>
 
-        <!-- ADMIN CONTROLS: Only show if the current user is an admin viewing someone else's profile -->
-        {% if current_user.role == 'admin' and current_user.id != profile_user.id %}
-            <div class="admin-controls">
-                <h4>⚙️ Admin Controls</h4>
-                <form action="{{ url_for('promote_user', username=profile_user.username) }}" method="POST">
-                    
-                    {% if profile_user.role == 'user' %}
-                        <button type="submit" name="action" value="promote" class="btn btn-promote">Promote to Moderator</button>
-                        <button type="submit" name="action" value="promote_admin" class="btn btn-promote-admin">Promote to Admin</button>
-                    
-                    {% elif profile_user.role == 'moderator' %}
-                        <button type="submit" name="action" value="promote_admin" class="btn btn-promote-admin">Promote to Admin</button>
-                        <button type="submit" name="action" value="demote" class="btn btn-demote">Demote to User</button>
-                    
-                    {% elif profile_user.role == 'admin' %}
-                        <button type="submit" name="action" value="demote" class="btn btn-demote">Demote to User</button>
-                    {% endif %}
-                    
+            {% if profile_user.about_me %}
+                <p><strong>About Me:</strong><br>{{ profile_user.about_me }}</p>
+            {% else %}
+                <p style="color: #888;"><em>This user hasn't written a bio yet.</em></p>
+            {% endif %}
+            
+            {% if current_user.id == profile_user.id %}
+                <hr>
+                <form action="{{ url_for('edit_profile') }}" method="POST" style="margin-top: 15px;">
+                    <label style="font-weight: bold; font-size: 0.9em;">Update Bio:</label>
+                    <textarea name="about_me" rows="2" style="width: 100%; box-sizing: border-box; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-top: 5px; font-family: inherit;">{{ current_user.about_me or '' }}</textarea>
+                    <button type="submit" class="btn btn-promote" style="background-color: #0066cc;">Save Profile</button>
                 </form>
-            </div>
-        {% endif %}
-    </div>
+            {% else %}
+                <!-- Follow/Unfollow Buttons -->
+                <form action="{{ url_for('unfollow' if is_following else 'follow', username=profile_user.username) }}" method="POST">
+                    {% if is_following %}
+                        <button type="submit" class="btn btn-follow" style="background-color: #6c757d;">Unfollow {{ profile_user.username }}</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-follow">Follow {{ profile_user.username }}</button>
+                    {% endif %}
+                </form>
+            {% endif %}
 
-    <div class="nav-links">
-        <a href="{{ url_for('explore') }}">← Back to Explore</a>
+            <!-- ADMIN CONTROLS: Only show if the current user is an admin/owner viewing someone else's profile -->
+            {% if current_user.role in ['admin', 'owner'] and current_user.id != profile_user.id %}
+                <hr>
+                <h3 style="color: #dc3545;">Admin Controls</h3>
+                
+                {% if profile_user.role == 'owner' %}
+                    <p style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba; display: inline-block;">
+                        👑 <strong>The Owner account cannot be modified or demoted.</strong>
+                    </p>
+                {% else %}
+                    <form action="{{ url_for('promote_user', username=profile_user.username) }}" method="POST" style="margin-top: 15px;">
+                        <button type="submit" name="action" value="promote_admin" class="btn" style="background-color: #0066cc; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Make Admin</button>
+                        <button type="submit" name="action" value="promote" class="btn" style="background-color: #6f42c1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Make Moderator</button>
+                        <button type="submit" name="action" value="demote" class="btn" style="background-color: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Demote to User</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
