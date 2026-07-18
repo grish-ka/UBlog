@@ -65,7 +65,7 @@ done
 ## run the simple way
 1. pull image
 ```bash
-docker pull grishkkka/ublog
+docker pull grishkkka/ublog:latest
 ```
 2. run
 
