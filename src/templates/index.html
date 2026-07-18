@@ -105,7 +105,7 @@
                 {% for blog in blogs %}
                     <div class="blog-card">
                         <div class="blog-card-header">
-                            <a href="{{ url_for('view_blog', blog_id=blog.id) }}" class="blog-title">{{ blog.title }}</a>
+                            <a href="{{ url_for('view_blog', blog_slug=blog.slug) }}" class="blog-title">{{ blog.title }}</a>
                             
                             <!-- Admin Delete Blog Button -->
                             {% if user.role in ['admin', 'owner'] %}

@@ -1,4 +1,5 @@
 import os
+import re
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
@@ -68,6 +69,7 @@ class User(db.Model):
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), unique=True, nullable=False)
+    slug = db.Column(db.String(120), unique=True) # NEW: URL-friendly name
     description = db.Column(db.String(255))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     owner = db.relationship('User', backref=db.backref('owned_blogs', lazy='dynamic'))
@@ -97,6 +99,25 @@ with app.app_context():
         db.session.commit()
     except Exception:
         db.session.rollback() # MAGIC FIX: Reset Postgres if the column already exists!
+
+    # Safe migration trick: Add 'slug' column for Blogs
+    try:
+        db.session.execute(db.text('ALTER TABLE blog ADD COLUMN slug VARCHAR(120)'))
+        db.session.commit()
+        
+        # Backfill existing blogs with safe slugs
+        for b in Blog.query.all():
+            if not b.slug:
+                base_slug = re.sub(r'[^a-zA-Z0-9]+', '-', b.title.lower()).strip('-') or 'blog'
+                slug = base_slug
+                counter = 1
+                while Blog.query.filter(Blog.id != b.id, Blog.slug == slug).first():
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+                b.slug = slug
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
         
     # Auto-upgrade the environment variable admin to the permanent 'owner' role
     admin_email = os.environ.get("ADMIN_EMAIL")
@@ -172,13 +193,20 @@ def index():
         
     return render_template("index.html", user=current_user, blogs=blogs, search_query=search_query)
 
-@app.route("/blog/<int:blog_id>", methods=["GET", "POST"])
-def view_blog(blog_id):
+@app.route("/blog/<blog_slug>", methods=["GET", "POST"])
+def view_blog(blog_slug):
     current_user = None
     if "user_id" in session:
         current_user = db.session.get(User, session["user_id"])
         
-    blog = db.session.get(Blog, blog_id)
+    blog = Blog.query.filter_by(slug=blog_slug).first()
+    
+    # Fallback trick: If they use an old numeric link, find it and redirect!
+    if not blog and blog_slug.isdigit():
+        blog = db.session.get(Blog, int(blog_slug))
+        if blog and blog.slug:
+            return redirect(url_for('view_blog', blog_slug=blog.slug))
+            
     if not blog:
         flash("Blog not found.")
         return redirect(url_for('index'))
@@ -192,7 +220,7 @@ def view_blog(blog_id):
             db.session.add(new_post)
             db.session.commit()
             flash("Your post is now live!")
-            return redirect(url_for('view_blog', blog_id=blog.id))
+            return redirect(url_for('view_blog', blog_slug=blog.slug))
             
     # Fetch posts specific to this blog
     posts = blog.posts.order_by(Post.timestamp.desc()).all()
@@ -211,6 +239,16 @@ def create_blog():
             flash("A blog with that title already exists!")
         else:
             new_blog = Blog(title=title, description=description, owner=current_user)
+            
+            # Generate a clean, URL-safe slug
+            base_slug = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-') or 'blog'
+            slug = base_slug
+            counter = 1
+            while Blog.query.filter_by(slug=slug).first():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            new_blog.slug = slug
+            
             db.session.add(new_blog)
             db.session.commit()
             flash(f"Blog '{title}' successfully created!")

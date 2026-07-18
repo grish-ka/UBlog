@@ -94,7 +94,7 @@
             <!-- Create a Post Form specific to this blog -->
             <div class="post-form-container">
                 <h3 style="margin-top: 0;">Post in {{ blog.title }}</h3>
-                <form method="POST" action="{{ url_for('view_blog', blog_id=blog.id) }}">
+                <form method="POST" action="{{ url_for('view_blog', blog_slug=blog.slug) }}">
                     <textarea name="body" rows="3" placeholder="What do you want to say?" required></textarea>
                     <button type="submit" class="btn-primary">Submit Post</button>
                 </form>
