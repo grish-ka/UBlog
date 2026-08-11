@@ -321,6 +321,13 @@ def delete_blog(blog_id):
     # Request.referrer sends you back to the page you clicked delete from (e.g. Admin Dashboard)
     return redirect(request.referrer or url_for('index'))
 
+@app.route("/play/ea/instanceTest")
+def play_instance_test():
+    current_user = "None"
+    if "user_id" in session:
+        current_user = db.session.get(User, session["user_id"])
+    return render_template("game.html", user=current_user)
+
 @app.route("/admin")
 @admin_required
 def admin_dashboard():

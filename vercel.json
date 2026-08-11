@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "src/app.py",
@@ -10,6 +9,35 @@
     {
       "src": "/(.*)",
       "dest": "src/app.py"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/static/game/ea/instanceTest/Build/(.*)\\.br",
+      "headers": [
+        {
+          "key": "Content-Encoding",
+          "value": "br"
+        }
+      ]
+    },
+    {
+      "source": "/static/game/ea/instanceTest/Build/(.*)\\.wasm\\.br",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/wasm"
+        }
+      ]
+    },
+    {
+      "source": "/static/game/ea/instanceTest/Build/(.*)\\.js\\.br",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
     }
   ]
 }
