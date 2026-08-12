@@ -1,0 +1,10 @@
+{
+  "installer": {
+    "url": "/static/game/ea/instanceTest/Downloads/InsancesTest_AMD64_Setup_0.1.0.exe",
+    "label": "Windows · .exe · 42.5 MB"
+  },
+  "portable": {
+    "url": "/static/game/ea/instanceTest/Downloads/InsancesTest_Windows-AMD64_Portable.zip",
+    "label": "Windows AMD64 · .zip · 57.2 MB"
+  }
+}

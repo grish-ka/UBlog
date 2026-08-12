@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ublog - Play Game</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #222; color: white; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .navbar a { text-decoration: none; color: #0066cc; font-weight: bold; }
+        .site-brand { font-size: 1.5rem; color: #333 !important; }
+        
+        .game-container { max-width: 1200px; margin: 40px auto; padding: 20px; text-align: center; }
+        .hint { color: #aaa; margin-bottom: 15px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="{{ url_for('index') }}" class="site-brand">ublog 🚀</a>
+        </div>
+        <div class="nav-right">
+            <a href="{{ url_for('index') }}">← Back to Home</a>
+        </div>
+    </nav>
+<!--
+    <div class="game-container">
+        <h1 style="margin-top: 0;">Instances Test</h1>
+        <p class="hint">🎮 Click inside the game window to enable WASD keyboard controls!</p>
+        
+        <iframe
+            src="{{ url_for('static', filename='game/ea/instanceTest/index.html') }}"
+            title="Instances"
+            allow="microphone; fullscreen; autoplay; pointer-lock"
+            style="width: 100%; height: 80vh; border: 2px solid #444; border-radius: 8px; display: block; background: #000;"
+        ></iframe>
+    </div>
+-->
+
+
+    <section class="ins-downloads">
+
+  <h2>Get Insances</h2>
+  <p class="ins-sub">Version 0.1.0 &middot; Windows 64-bit</p>
+
+  <div class="ins-grid">
+
+    <a class="ins-card ins-card--primary"
+        data-dl="installer"
+        href="/static/game/ea/instanceTest/Downloads/InsancesTest_Setup_0.1.0.exe"
+        download>
+        <span class="ins-title">Download Installer</span>
+        <span class="ins-meta">Windows &middot; .exe &middot; 42.5 MB</span>
+        <span class="ins-note">Installs for your user only. No admin needed.</span>
+    </a>
+
+    <a class="ins-card"
+        data-dl="portable"
+        href="/static/game/ea/instanceTest/Downloads/InsancesTest_Windows-AMD64_Portable.zip"
+        download>
+        <span class="ins-title">Download Portable</span>
+        <span class="ins-meta">Windows AMD64 &middot; .zip &middot; 57.2 MB</span>
+        <span class="ins-note">Unzip and run. Nothing is installed.</span>
+    </a>
+
+
+    <a class="ins-card" href="/static/game/ea/instanceTest/index.html">
+      <span class="ins-title">Play in Browser</span>
+      <span class="ins-meta">No download &middot; works on mobile</span>
+      <span class="ins-note">Join a friend with a code.</span>
+    </a>
+
+  </div>
+
+  <details class="ins-details">
+    <summary>Windows says &ldquo;Windows protected your PC&rdquo;</summary>
+    <p>
+      The download isn&rsquo;t code-signed, so SmartScreen warns about anything it
+      hasn&rsquo;t seen before. Click <strong>More info</strong>, then
+      <strong>Run anyway</strong>. The installer only writes to your own user folder and
+      never asks for administrator rights.
+    </p>
+  </details>
+
+  <p class="ins-foot">
+    The desktop build can host on a LAN or over the internet. The browser build can only
+    join with a code &mdash; browsers can&rsquo;t open the kind of connection hosting needs.
+  </p>
+</section>
+
+<style>
+  .ins-downloads { max-width: 940px; margin: 0 auto; padding: 2.5rem 1rem;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #e8eaed; }
+  .ins-downloads h2 { margin: 0 0 .25rem; font-size: 1.9rem; }
+  .ins-sub { margin: 0 0 1.5rem; opacity: .65; font-size: .95rem; }
+  .ins-grid { display: grid; gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .ins-card { display: flex; flex-direction: column; gap: .3rem;
+    padding: 1.15rem 1.25rem; border-radius: 12px; text-decoration: none;
+    background: #1b2430; border: 1px solid #2b3644; color: inherit;
+    transition: background .15s ease, transform .15s ease; }
+  .ins-card:hover { background: #232f3d; transform: translateY(-2px); }
+  .ins-card--primary { background: #1d3a2e; border-color: #2f5c48; }
+  .ins-card--primary:hover { background: #234736; }
+  .ins-title { font-size: 1.08rem; font-weight: 700; }
+  .ins-meta { font-size: .85rem; opacity: .7; }
+  .ins-note { font-size: .85rem; opacity: .55; margin-top: .35rem; }
+  .ins-details { margin-top: 1.5rem; font-size: .93rem; opacity: .85; }
+  .ins-details summary { cursor: pointer; }
+  .ins-details p { line-height: 1.6; }
+  .ins-foot { margin-top: 1.25rem; font-size: .88rem; opacity: .6; line-height: 1.6; }
+</style>
+<script>
+  fetch('/static/game/ea/instanceTest/Downloads/latest.json')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return;
+      document.querySelectorAll('[data-dl]').forEach(function (link) {
+        var entry = data[link.dataset.dl];
+        if (!entry) return;
+        if (entry.url) link.href = entry.url;
+        var meta = link.querySelector('.ins-meta');
+        if (meta && entry.label) meta.textContent = entry.label;
+      });
+    })
+    .catch(function () { /* leave the hardcoded links alone */ });
+</script>
+
+</body>
+</html>

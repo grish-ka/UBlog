@@ -323,10 +323,10 @@ def delete_blog(blog_id):
 
 @app.route("/play/ea/instanceTest")
 def play_instance_test():
-    current_user = "None"
+    current_user = None
     if "user_id" in session:
         current_user = db.session.get(User, session["user_id"])
-    return render_template("game.html", user=current_user)
+    return render_template("game_instanceTest.html", user=current_user)
 
 @app.route("/admin")
 @admin_required

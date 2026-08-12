@@ -38,6 +38,14 @@
           "value": "application/javascript"
         }
       ]
+    },
+    {
+      "source": "/static/game/ea/instanceTest/Downloads(.*)\\.exe",
+      "headers": [
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Content-Disposition", "value": "attachment" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
     }
   ]
 }
